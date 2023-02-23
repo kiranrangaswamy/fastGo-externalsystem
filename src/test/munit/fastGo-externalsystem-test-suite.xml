@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:dbserver="http://www.mulesoft.org/schema/mule/dbserver" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/dbserver http://www.mulesoft.org/schema/mule/dbserver/current/mule-dbserver.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<munit:config name="fastGo-externalsystem-test-suite.xml" />
+	<dbserver:config name="MUnit_DB_Server_Config" doc:name="MUnit DB Server Config" doc:id="5d92452d-bccb-4efa-a5cd-3fbb6bcd31d6" >
+		<dbserver:connection csv="routes.csv" database="testDB" />
+	</dbserver:config>
+	<db:config name="Test_database_config" doc:name="Database Config" doc:id="2518e103-15f9-4e1e-ab0b-6aeee18071e5" >
+		<db:generic-connection url="jdbc:h2:tcp://localhost/mem:testDB" driverClassName="org.h2.Driver" />
+	</db:config>
+	<dbserver:config name="MUnit_DB_Server_Config1" doc:name="MUnit DB Server Config" doc:id="64707519-9719-44ce-a581-fd6205c15f7c" >
+		<dbserver:connection csv="schedules.csv" database="testdb" />
+	</dbserver:config>
+	<db:config name="Test_database" doc:name="Database Config" doc:id="b054aa26-9015-4647-ada2-32d2e894d8a8" >
+		<db:generic-connection url="jdbc:h2:tcp://localhost/mem:testdb" driverClassName="org.h2.Driver" />
+	</db:config>
+	<munit:test name="fastGo-GetRoutes-ImplFlow-test-suite" doc:id="763c497c-f380-4d64-8b4b-13f469d0081d" description="Test">
+		<munit:execution >
+			<flow-ref doc:name="Flow Reference" doc:id="3a5f5f98-3d2f-473e-887d-02593b29cb67" name="setEventRoutesFlow" />
+			<flow-ref doc:name="Flow-ref to fastGo-GetRoutes-ImplFlow" doc:id="f6554990-5b89-4262-b4cd-6806a1043e34" name="fastGo-GetRoutes-ImplFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="40b1e00a-f0e2-46e2-80bb-0be699b31dfa" message="the payload is null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+			<munit-tools:assert doc:name="Assert expression" doc:id="ce33ca6c-3b34-4090-9aba-076612c14929">
+				<munit-tools:that><![CDATA[#[import * from dw::test::Asserts 
+ ---
+payload must beArray()]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="fastGo-GetSchedules-ImplFlow-test-suiteTest" doc:id="24e0e269-9f38-404d-a6d2-06b61dde79c4" >
+		<munit:execution >
+			<flow-ref doc:name="setEventShedules" doc:id="4b0151cc-b3ab-4f04-9a93-4d5d60a72e09" name="setEventShedules"/>
+			<flow-ref doc:name="fastGo-GetSchedules-ImplFlow" doc:id="48bfdc53-8534-4a55-bcab-03a643f1f23b" name="fastGo-GetSchedules-ImplFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="841cf9c9-461f-49a0-8eea-3ff2ed6ba8b0" message="the payload is null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="856aebfc-6893-46b7-899e-92621e0b4aaf" actual="#[payload]" expected='#[[&#10;  {&#10;    "TOLOCATION": "BEN-SG",&#10;    "DEPARTUREDATETIME": "2021-03-22T12:12:12.090Z",&#10;    "FROMLOCATION": "KLG-MY",&#10;    "COMPANYNAME": "FastGo",&#10;    "AVAILABLESEAT": "40"&#10;  },&#10;  {&#10;    "TOLOCATION": "KLG-MY",&#10;    "DEPARTUREDATETIME": "2021-03-22T12:12:12.090Z",&#10;    "FROMLOCATION": "BEN-SG",&#10;    "COMPANYNAME": "FastGo",&#10;    "AVAILABLESEAT": "40"&#10;  }&#10;]]'/>
+		</munit:validation>
+	</munit:test>
+	<flow name="setEventRoutesFlow" doc:id="e032803c-eb03-439d-a39d-5a1350e1e871" >
+		<munit:set-event doc:name="Set Event for routes" doc:id="f054fccd-fdb0-4fd6-bf24-232ab985355c" >
+			<munit:attributes value='#[{"uriParams" : {"serviceType": "routes"},"headers": {"transactionId": "sgs-hzj-ueid"}}]' />
+		</munit:set-event>
+	</flow>
+	<flow name="setEventShedules" doc:id="3f07effb-a765-439c-8383-b0685711e18e" >
+		<munit:set-event doc:name="Set Event" doc:id="c9f87f88-a1eb-4612-aa7b-4b2dbb4031b2" >
+			<munit:attributes value='#[{"uriParams" : {"serviceType": "schedules"},"headers": {"transactionId": "sgs-hzj-ueid"}}]' />
+		</munit:set-event>
+	</flow>
+	<munit:test name="FastGo-GetRoutes-external-test-suiteTest" doc:id="dc8a0550-11ca-4e95-9c39-dc8fd7304c09" >
+		<munit:execution >
+			<flow-ref doc:name="Flow Reference" doc:id="34f98de4-5d01-4f50-ba4e-d1ccf7e5011b" name="setEventRoutesFlow" />
+			<flow-ref doc:name="Flow Reference1" doc:id="09021aff-dfff-4b71-9640-16c782a5fa7a" name="fastGo-externalsystemFlow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert expression" doc:id="c02efc88-7277-4890-942b-c983b22f52dd" />
+			<munit-tools:assert-that doc:name="Assert that" doc:id="110a6ff8-273e-4b9b-b52c-f825ca50c538" expression="#[payload]" is="#[MunitTools::withMediaType('application/json')]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="FastGo-GetSchedules-external-test-suiteTest" doc:id="f76921b9-d2dc-4f6b-84e0-674e2301bcde" >
+		<munit:execution >
+			<flow-ref doc:name="Flow Reference" doc:id="759ac87a-c6ea-497f-b729-68282c8045d8" name="setEventShedules" />
+			<flow-ref doc:name="Flow Reference1" doc:id="b6ad61af-aaba-4bae-858d-9d440914c67b" name="fastGo-externalsystemFlow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert expression" doc:id="0f34f515-4871-4125-83d2-dcee1c8878ce" />
+			<munit-tools:assert-that doc:name="Assert that" doc:id="71544200-3e0b-4e27-87d0-d4e759577d34" expression="#[payload]" is="#[MunitTools::withMediaType('application/json')]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="fastGo-externalsystemFlowTest-default-condition" doc:id="a6958cd3-43c1-4cc0-a210-ec3e1384ae8c" description="Test" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Event" doc:id="6602a9d7-0125-4918-8444-1137ce8330b2" >
+				<munit:payload value='#[%dw 2.0&#10;var errorMessage =  "Error occurred"&#10;---&#10;{&#10;	"variable": errorMessage ++ "error on Travel on Tip external sys"&#10;}]' />
+				<munit:attributes value='#[{"uriParams" : {"serviceType": "demo"},"headers": {"transactionId": "sgs-hzj-ueid"}}]' />
+				<munit:variables >
+					<munit:variable key="statusCode" value="500" mediaType="application/json" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to fastGo-externalsystemFlow" doc:id="2b8ed32d-915c-4619-a9ab-729330e9ad91" name="fastGo-externalsystemFlow" />
+		</munit:execution>
+	</munit:test>
+
+
+</mule>
